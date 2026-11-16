@@ -1,19 +1,31 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useEffect, useState } from "react";
 import gsap from "gsap";
-
+import { useLocation, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
 import LoginForm from "../../components/auth/LoginForm";
-import RegisterForm from "../../components/auth/RegisterForm";
+import SignupForm from "../../components/auth/SignupForm";
 import { AuthDivider } from "../../components/auth/AuthDivider";
 import SocialLogin from "../../components/SocialLogin";
 
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "signup";
 
 function AuthPage() {
-  const [mode, setMode] = useState<AuthMode>("login");
+  const location = useLocation();
+  const navigate = useNavigate();
 
+  // URL path se initial mode determine karo
+  const initialMode: AuthMode = location.pathname === "/signp" ? "signup" : "login";
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const formRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
+
+  // Jab URL change ho (e.g., back/forward button), tab mode sync karo
+  useEffect(() => {
+    const currentMode = location.pathname === "/signup" ? "signup" : "login";
+    if (mode !== currentMode) {
+      setMode(currentMode);
+    }
+  }, [location.pathname]);
 
   useLayoutEffect(() => {
     const indicator = indicatorRef.current;
@@ -24,44 +36,24 @@ function AuthPage() {
       ease: "power3.inOut",
     });
 
-    moveIndicator(mode === "register" ? 100 : 0);
+    moveIndicator(mode === "signup" ? 100 : 0);
 
     return () => {
       gsap.killTweensOf(indicator);
     };
   }, [mode]);
 
-  // useLayoutEffect(() => {
-  //   const container = formRef.current;
-  //   if (!container) return;
-
-  //   const context = gsap.context(() => {
-  //     const animatedElements = container.querySelectorAll(
-  //       ".auth-heading, .social-auth, .auth-divider, .form-group > *, .auth-form > label, .auth-form > button, .auth-footer"
-  //     );
-
-  //     gsap.fromTo(
-  //       animatedElements,
-  //       { autoAlpha: 0, y: 18 },
-  //       {
-  //         autoAlpha: 1,
-  //         y: 0,
-  //         duration: 0.55,
-  //         stagger: 0.065,
-  //         ease: "power3.out",
-  //         clearProps: "opacity,visibility,transform",
-  //       }
-  //     );
-  //   }, container);
-
-  //   return () => context.revert();
-  // }, [mode]);
+  // Handle manual mode switch via buttons
+  const handleModeSwitch = (newMode: AuthMode) => {
+    if (mode !== newMode) {
+      setMode(newMode);
+      navigate(`/${newMode}`); // Update URL when switching modes
+    }
+  };
 
   return (
     <AuthLayout>
-      
       <section className="mx-auto flex w-full max-w-[380px] flex-col justify-center min-h-[500px] p-6 sm:p-10">
-        
         <header className="mb-10 text-center">
           <a href="/" className="text-2xl font-bold tracking-tight text-neutral-900">
             aura<span className="text-violet-500">.</span>
@@ -96,7 +88,7 @@ function AuthPage() {
 
           <button
             type="button"
-            onClick={() => setMode("login")}
+            onClick={() => handleModeSwitch("login")}
             aria-pressed={mode === "login"}
             className={`relative z-10 w-1/2 py-2.5 text-sm font-medium transition-colors duration-300 ${
               mode === "login" ? "text-black" : "text-gray-500"
@@ -107,10 +99,10 @@ function AuthPage() {
 
           <button
             type="button"
-            onClick={() => setMode("register")}
-            aria-pressed={mode === "register"}
+            onClick={() => handleModeSwitch("signup")}
+            aria-pressed={mode === "signup"}
             className={`relative z-10 w-1/2 py-2.5 text-sm font-medium transition-colors duration-300 ${
-              mode === "register" ? "text-black" : "text-gray-500"
+              mode === "signup" ? "text-black" : "text-gray-500"
             }`}
           >
             Signup
@@ -119,9 +111,9 @@ function AuthPage() {
 
         <div ref={formRef} key={mode} className="w-full">
           {mode === "login" ? (
-            <LoginForm onSwitch={(() => setMode("register"))}/>
+            <LoginForm onSwitch={() => handleModeSwitch("signup")} />
           ) : (
-             <RegisterForm onSwitch={(() => setMode("login"))} />
+            <SignupForm onSwitch={() => handleModeSwitch("login")} />
           )}
         </div>
         <AuthDivider />

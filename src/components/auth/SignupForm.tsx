@@ -10,11 +10,11 @@ import {
 import { useForm } from "../../hooks/useForm";
 import { FiUser, FiMail, FiLock, FiArrowLeft } from "react-icons/fi";
 
-interface RegisterFormProps {
+interface SignupFormProps {
   onSwitch: () => void;
 }
 
-type RegisterFormData = {
+type SignupFormData = {
   fullName: string;
   email: string;
   password: string;
@@ -22,7 +22,7 @@ type RegisterFormData = {
   acceptedTerms: boolean;
 };
 
-const INITIAL_DATA: RegisterFormData = {
+const INITIAL_DATA: SignupFormData = {
   fullName: "",
   email: "",
   password: "",
@@ -30,7 +30,7 @@ const INITIAL_DATA: RegisterFormData = {
   acceptedTerms: false,
 };
 
-const REGISTER_RULES: ValidationRules<RegisterFormData> = {
+const REGISTER_RULES: ValidationRules<SignupFormData> = {
   fullName: (value) =>
     required("Please enter your full name.")(value) ??
     minLength(3, "Name must be at least 3 characters.")(value as string),
@@ -51,14 +51,14 @@ const REGISTER_RULES: ValidationRules<RegisterFormData> = {
   ),
 };
 
-export default function RegisterForm({ onSwitch }: RegisterFormProps) {
+export default function SignupForm({ onSwitch }: SignupFormProps) {
   const { formData, errors, handleChange, validateStep, validateAll } = useForm(
     INITIAL_DATA,
     REGISTER_RULES,
   );
   const [step, setStep] = useState(0);
 
-  const STEP_FIELDS: (keyof RegisterFormData)[][] = [
+  const STEP_FIELDS: (keyof SignupFormData)[][] = [
     ["fullName"],
     ["email"],
     ["password"],
@@ -187,14 +187,14 @@ export default function RegisterForm({ onSwitch }: RegisterFormProps) {
               <span className="text-sm leading-5 text-gray-600">
                 I agree to the{" "}
                 <a
-                  href="/terms"
+                  href="#"
                   className="font-medium text-[#0d6efd] transition-colors hover:text-blue-700"
                 >
                   Terms of Service
                 </a>{" "}
                 and{" "}
                 <a
-                  href="/privacy"
+                  href="#"
                   className="font-medium text-[#0d6efd] transition-colors hover:text-blue-700"
                 >
                   Privacy Policy
