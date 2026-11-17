@@ -5,21 +5,18 @@ import AuthLayout from "../../components/auth/AuthLayout";
 import LoginForm from "../../components/auth/LoginForm";
 import SignupForm from "../../components/auth/SignupForm";
 import { AuthDivider } from "../../components/auth/AuthDivider";
-import SocialLogin from "../../components/SocialLogin";
+import SocialLogin from "../../components/SocialAuth";
 
 type AuthMode = "login" | "signup";
 
 function AuthPage() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // URL path se initial mode determine karo
   const initialMode: AuthMode = location.pathname === "/signp" ? "signup" : "login";
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const formRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
 
-  // Jab URL change ho (e.g., back/forward button), tab mode sync karo
   useEffect(() => {
     const currentMode = location.pathname === "/signup" ? "signup" : "login";
     if (mode !== currentMode) {
@@ -42,12 +39,36 @@ function AuthPage() {
       gsap.killTweensOf(indicator);
     };
   }, [mode]);
+  useLayoutEffect(() => {
+    const container = formRef.current;
+    if (!container) return;
 
-  // Handle manual mode switch via buttons
+    const context = gsap.context(() => {
+      const animatedElements = document.querySelectorAll(
+        ".auth-heading, .auth-form, .auth-divider, .social-auth" 
+      );
+
+      gsap.fromTo(
+        animatedElements,
+        { autoAlpha: 0, y: 20 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: "power3.out",
+          clearProps: "all",
+        }
+      );
+    }, container);
+
+    return () => context.revert();
+  }, [mode]);
+
   const handleModeSwitch = (newMode: AuthMode) => {
     if (mode !== newMode) {
       setMode(newMode);
-      navigate(`/${newMode}`); // Update URL when switching modes
+      navigate(`/${newMode}`);
     }
   };
 

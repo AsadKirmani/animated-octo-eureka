@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FiCheckCircle,
   FiEye,
@@ -16,6 +16,7 @@ interface FloatingInputProps extends InputHTMLAttributes<HTMLInputElement> {
   wrapperClassName?: string;
   onWrapperClick?: () => void;
   error?: string;
+  isActive: boolean,
 }
 
 function FloatingInput({
@@ -30,6 +31,7 @@ function FloatingInput({
   wrapperClassName = "",
   onWrapperClick,
   error,
+  isActive,
   ...inputProps
 }: FloatingInputProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +39,7 @@ function FloatingInput({
   const isPassword = type === "password";
   const inputType = isPassword && showPassword ? "text" : type;
   const value = String(inputProps.value ?? "");
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const showHighlights =
     isPassword &&
@@ -44,6 +47,13 @@ function FloatingInput({
     !showPassword &&
     value.length > 0 &&
     highlightAgainst.length > 0;
+
+    useEffect(() => {
+      if(isActive && inputRef.current) {
+        const timer = setTimeout(() => inputRef.current?.focus(), 300)
+        return () => clearTimeout(timer)
+      }
+    }, [isActive])
 
   return (
     <div
@@ -69,7 +79,8 @@ function FloatingInput({
           id={name}
           name={name}
           type={inputType}
-          placeholder=" "
+          ref={inputRef}
+          placeholder=""
           required={required}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${name}-error` : undefined}

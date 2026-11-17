@@ -7,7 +7,8 @@ import {
 import { useForm } from "../../hooks/useForm";
 import FloatingInput from "../FloatingInput";
 import StackedCards from "../StackedCards";
-import { FiMail, FiLock, FiArrowLeft} from "react-icons/fi";
+import { FiMail, FiLock, FiArrowLeft } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 interface LoginFormProps {
   onSwitch: () => void;
@@ -32,14 +33,12 @@ const LOGIN_RULES: ValidationRules<LoginFormData> = {
   password: required("Please enter your password."),
 };
 
-const STEP_FIELDS: (keyof LoginFormData)[][] = [
-  ["email"], 
-  ["password"],
-  [],
-];
+const STEP_FIELDS: (keyof LoginFormData)[][] = [["email"], ["password"], []];
 
 export default function LoginForm({ onSwitch }: LoginFormProps) {
   const [step, setStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   const {
     formData,
     setFormData,
@@ -50,10 +49,10 @@ export default function LoginForm({ onSwitch }: LoginFormProps) {
   } = useForm(INITIAL_DATA, LOGIN_RULES);
 
   const isEmailValid =
-      formData.email.length > 0 &&
-      !LOGIN_RULES.email?.(formData.email, formData);
+    formData.email.length > 0 && !LOGIN_RULES.email?.(formData.email, formData);
 
   const handleNext = (e?: React.FormEvent) => {
+    if (isLoading) return;
     if (e) e.preventDefault();
 
     const currentFields = STEP_FIELDS[step];
@@ -66,7 +65,11 @@ export default function LoginForm({ onSwitch }: LoginFormProps) {
       setStep(step + 1);
     } else if (step === 2 || (isStepValid && step === 2)) {
       if (validateAll()) {
-        console.log("Submit to API:", formData);
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          navigate("/home", { state: { user: formData } });
+        }, 1500);
       }
     }
   };
@@ -90,6 +93,7 @@ export default function LoginForm({ onSwitch }: LoginFormProps) {
               type="email"
               startIcon={<FiMail size={20} />}
               required
+              isActive={step === 0}
               value={formData.email}
               onChange={handleChange}
               disabled={step !== 0}
@@ -106,6 +110,7 @@ export default function LoginForm({ onSwitch }: LoginFormProps) {
               type="password"
               startIcon={<FiLock size={20} />}
               required={step >= 1}
+              isActive={step === 1}
               value={formData.password}
               onChange={handleChange}
               disabled={step !== 1}
@@ -162,9 +167,35 @@ export default function LoginForm({ onSwitch }: LoginFormProps) {
 
           <button
             type="submit"
+            disabled={isLoading}
             className="flex-1 h-full flex items-center justify-center gap-2 rounded-xl bg-[#0d6efd] border-2 border-blue-500 px-8 text-[15px] font-medium text-white transition-transform active:scale-[0.98] hover:bg-blue-700 shadow-sm"
           >
-            {step === 2 ? <>Login</> : <>Continue</>}
+            {isLoading ? (
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : step === 2 ? (
+              <>Login</>
+            ) : (
+              <>Continue</>
+            )}
           </button>
         </div>
       </form>

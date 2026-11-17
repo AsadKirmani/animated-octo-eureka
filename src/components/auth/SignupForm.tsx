@@ -9,6 +9,7 @@ import {
 } from "../../utils/formValidation";
 import { useForm } from "../../hooks/useForm";
 import { FiUser, FiMail, FiLock, FiArrowLeft } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 interface SignupFormProps {
   onSwitch: () => void;
@@ -57,6 +58,8 @@ export default function SignupForm({ onSwitch }: SignupFormProps) {
     REGISTER_RULES,
   );
   const [step, setStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const STEP_FIELDS: (keyof SignupFormData)[][] = [
     ["fullName"],
@@ -81,6 +84,7 @@ export default function SignupForm({ onSwitch }: SignupFormProps) {
 
   const handleNext = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (isLoading) return;
 
     const currentFields = STEP_FIELDS[step];
     const isStepValid =
@@ -92,7 +96,11 @@ export default function SignupForm({ onSwitch }: SignupFormProps) {
       setStep(step + 1);
     } else if (step === 3 || (isStepValid && step === 3)) {
       if (validateAll()) {
-        console.log("Submit to API:", formData);
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          navigate("/home", { state: { user: formData } });
+        }, 1500);
       }
     }
   };
@@ -114,12 +122,13 @@ export default function SignupForm({ onSwitch }: SignupFormProps) {
               name="fullName"
               label="Full name"
               type="text"
-              startIcon={<FiUser size={20}/>}
+              startIcon={<FiUser size={20} />}
               autoComplete="name"
               value={formData.fullName}
               onChange={handleChange}
               error={errors.fullName}
               required
+              isActive={step === 0}
               onWrapperClick={() => step > 0 && setStep(0)}
               validationStatus={
                 errors.fullName ? "mismatch" : isNameValid ? "match" : null
@@ -132,6 +141,7 @@ export default function SignupForm({ onSwitch }: SignupFormProps) {
               type="email"
               startIcon={<FiMail size={20} />}
               autoComplete="email"
+              isActive={step === 1}
               value={formData.email}
               onChange={handleChange}
               error={errors.email}
@@ -150,6 +160,7 @@ export default function SignupForm({ onSwitch }: SignupFormProps) {
               autoComplete="new-password"
               value={formData.password}
               onChange={handleChange}
+              isActive={step === 2}
               highlightAgainst={formData.confirmPassword}
               error={errors.password}
               required
@@ -164,6 +175,7 @@ export default function SignupForm({ onSwitch }: SignupFormProps) {
               autoComplete="new-password"
               value={formData.confirmPassword}
               onChange={handleChange}
+              isActive={step === 3}
               error={errors.confirmPassword}
               validationStatus={
                 passwordsMatch ? "match" : passwordsExceeded ? "mismatch" : null
@@ -224,9 +236,35 @@ export default function SignupForm({ onSwitch }: SignupFormProps) {
 
           <button
             type="submit"
+            disabled={isLoading}
             className="flex-1 h-full flex items-center justify-center gap-2 rounded-xl bg-[#0d6efd] border-2 border-blue-500 px-8 text-[15px] font-medium text-white transition-transform active:scale-[0.98] hover:bg-blue-700 shadow-sm"
           >
-            {step === 3 ? "Create Account" : "Continue"}
+            {isLoading ? (
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : step === 3 ? (
+              "Create Account"
+            ) : (
+              "Continue"
+            )}
           </button>
         </div>
       </form>
